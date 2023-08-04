@@ -1,0 +1,88 @@
+version: '3.7'
+services:
+  dbserver1:
+    image: arangodb:3.9.1
+    command: arangod -server.endpoint tcp://0.0.0.0:8530 --cluster.my-address tcp://dbserver1:8530 --cluster.my-role PRIMARY --cluster.agency-endpoint tcp://agency1:8531 --cluster.agency-endpoint tcp://agency2:8531 --cluster.agency-endpoint tcp://agency3:8531  --database.directory /var/lib/arangodb3/primary1
+    environment:
+      ARANGO_NO_AUTH: 1
+      ARANGO_STORAGE_ENGINE: rocksdb
+    volumes:
+      - dbserver1-data:/var/lib/arangodb3
+    networks:
+      - arangodb-network
+
+  dbserver2:
+    image: arangodb:3.9.1
+    command: arangod -server.endpoint tcp://0.0.0.0:8530 --cluster.my-address tcp://dbserver2:8530 --cluster.my-role PRIMARY --cluster.agency-endpoint tcp://agency1:8531 --cluster.agency-endpoint tcp://agency2:8531 --cluster.agency-endpoint tcp://agency3:8531  --database.directory /var/lib/arangodb3/primary2
+    environment:
+      ARANGO_NO_AUTH: 1
+      ARANGO_STORAGE_ENGINE: rocksdb
+    volumes:
+      - dbserver2-data:/var/lib/arangodb3
+    networks:
+      - arangodb-network
+
+  coordinator1:
+    image: arangodb:3.9.1
+    command: arangod --server.endpoint tcp://0.0.0.0:8529 --cluster.my-address tcp://coordinator1:8529 --cluster.my-role COORDINATOR --cluster.agency-endpoint tcp://agency1:8531 --cluster.agency-endpoint tcp://agency2:8531 --cluster.agency-endpoint tcp://agency3:8531
+    environment:
+      ARANGO_NO_AUTH: 1
+    volumes:
+      - coordinator1-data:/var/lib/arangodb3
+    networks:
+      - arangodb-network
+    ports: ["8529:8529"]
+
+  coordinator2:
+    image: arangodb:3.9.1
+    command: arangod --server.endpoint tcp://0.0.0.0:8529 --cluster.my-address tcp://coordinator2:8529 --cluster.my-role COORDINATOR --cluster.agency-endpoint tcp://agency1:8531 --cluster.agency-endpoint tcp://agency2:8531 --cluster.agency-endpoint tcp://agency3:8531
+    environment:
+      ARANGO_NO_AUTH: 1
+    volumes:
+      - coordinator2-data:/var/lib/arangodb3
+    networks:
+      - arangodb-network
+    ports: ["8530:8529"]
+
+  agency1:
+    image: arangodb:3.9.1
+    command: arangod --server.endpoint tcp://0.0.0.0:8531 --agency.my-address=tcp://agency1:8531 --agency.activate true --agency.size 3 --agency.endpoint tcp://agency1:8531 --agency.endpoint tcp://agency2:8531 --agency.endpoint tcp://agency3:8531 --agency.supervision true --database.directory agent
+    environment:
+      ARANGO_NO_AUTH: 1
+    volumes:
+      - agency1-data:/var/lib/arangodb3
+    networks:
+      - arangodb-network
+
+  agency2:
+    image: arangodb:3.9.1
+    command: arangod --server.endpoint tcp://0.0.0.0:8531 --agency.my-address=tcp://agency2:8531 --agency.activate true --agency.size 3 --agency.endpoint tcp://agency1:8531 --agency.endpoint tcp://agency2:8531 --agency.endpoint tcp://agency3:8531 --agency.supervision true --database.directory agent
+    environment:
+      ARANGO_NO_AUTH: 1
+    volumes:
+      - agency2-data:/var/lib/arangodb3
+    networks:
+      - arangodb-network
+
+  agency3:
+    image: arangodb:3.9.1
+    command: arangod --server.endpoint tcp://0.0.0.0:8531 --agency.my-address=tcp://agency3:8531 --agency.activate true --agency.size 3 --agency.endpoint tcp://agency1:8531 --agency.endpoint tcp://agency2:8531 --agency.endpoint tcp://agency3:8531 --agency.supervision true --database.directory agent
+    environment:
+      ARANGO_NO_AUTH: 1
+    volumes:
+      - agency3-data:/var/lib/arangodb3
+    networks:
+      - arangodb-network
+
+volumes:
+  dbserver1-data:
+  dbserver2-data:
+  coordinator1-data:
+  coordinator2-data:
+  agency1-data:
+  agency2-data:
+  agency3-data:
+
+networks:
+  arangodb-network:
+    driver: bridge
